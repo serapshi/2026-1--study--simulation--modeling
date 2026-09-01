@@ -6,9 +6,12 @@
   "repository": "https://github.com/serapshi/2026-1--study--simulation--modeling.git",
   "author": "Сергей Павлюченков <thefrankleen@gmail.com>",
   "license": "CC-BY-4.0",
-    "config": {
-	"commitizen": {
-	    "path": "cz-customizable"
-	}
+  "config": {
+    "commitizen": {
+      "path": "cz-customizable"
     }
+  },
+  "devDependencies": {
+    "standard-changelog": "^8.1.0"
+  }
 }
