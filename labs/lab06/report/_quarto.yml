@@ -35,7 +35,7 @@ format:
   ### Pdf output format
   pdf:
     monofont: "DejaVu Sans Mono"
-    # pdf-engine: xelatex
+    pdf-engine: xelatex
     ### minted support
     # filters:
     #   - minted-quarto

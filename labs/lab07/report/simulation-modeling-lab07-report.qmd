@@ -71,7 +71,7 @@ license: "CC BY"
 
 ![Вычисления в ross_run.ipynb](image/img7.png){#fig-007 width=70%}
 
-{{< include ../project/markdown/run_ross/run_ross.qmd >}}
+{{< include ../project/markdown/ross_run/ross_run.qmd >}}
 
 
 Ну и мы получаем оставшиеся графики, которые нам нужны были, например, дельта уравнения зависимости от количества современных, зависимости от с в m/m/c. И также сравнение имитации с аналитическими результатами, которые оказались довольно точными   ([рис. @fig-008]).
@@ -79,7 +79,7 @@ license: "CC BY"
 ![Вычисления в mmc_run.ipynb](image/img8.png){#fig-008 width=70%}
 
 
-{{< include ../project/markdown/run_mmc/run_mmc.qmd >}}
+{{< include ../project/markdown/mmc_run/mmc_run.qmd >}}
 
 
 # Выводы

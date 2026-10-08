@@ -52,27 +52,12 @@ for params in param_list
     @process vaccinate(des_model.sim, des_model, t_vac, fraction)
     sir_run(des_model, tmax)
     data_des = out(des_model)
-```
-
-Переболевшие без учёта вакцинированных (они тоже попадают в R)
-
-```{julia}
     n_vacc = round(Int, fraction * u0[1])
     push!(results, (fraction = fraction, t_vac = t_vac, rep = rep,
         peak_I = maximum(data_des.I),
         infected = data_des.R[end] - n_vacc))
-```
-
-Данные каждого прогона
-
-```{julia}
     filename = savename("vac", params, "csv"; accesses = varying)
     CSV.write(datadir("sims", filename), data_des)
-```
-
-График динамики только для первого повтора
-
-```{julia}
     if rep == 1
         @df data_des plot(:t, [:S :I :R], labels = ["S" "I" "R"],
             xlab = "Время", ylab = "Численность",
@@ -81,6 +66,17 @@ for params in param_list
     end
 end
 ```
+
+Переболевшие без учёта вакцинированных (они тоже попадают в R)
+
+
+Данные каждого прогона
+
+
+
+График динамики только для первого повтора
+
+
 
 ## Анализ результатов
 Усредняем по повторам для каждой доли вакцинированных

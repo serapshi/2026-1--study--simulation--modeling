@@ -15,13 +15,14 @@ params = Dict(
     :seed => 123,
 )
 
-res = []
-for p in dict_list(params)
+
 ```
 
 produce_or_load запускает расчёт только если файла ещё нет
 
 ```{julia}
+res = []
+for p in dict_list(params)
     data, _ = produce_or_load(p, datadir("sims", "mmc"); prefix = "mmc") do p
         log = run_mmc(; p...)
         Dict("wait" => [r.start - r.arrival for r in log],

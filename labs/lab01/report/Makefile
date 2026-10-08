@@ -1,5 +1,6 @@
+export GKSwstype = 100
 all:
-	-@quarto render
+	quarto render
 
 clean:
 	-rm -rf _output
