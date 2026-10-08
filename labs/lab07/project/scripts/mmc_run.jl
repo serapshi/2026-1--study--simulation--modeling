@@ -1,0 +1,55 @@
+using DrWatson
+@quickactivate "project"
+using Statistics, Plots
+include(srcdir("mmc.jl"))
+
+# Набор параметров: dict_list разворачивает массивы в комбинации
+params = Dict(
+    :lam => 0.9, :mu => 0.5,
+    :c => [1, 2, 3, 4],
+    :num_customers => 20_000,
+    :seed => 123,
+)
+
+res = []
+for p in dict_list(params)
+    # produce_or_load запускает расчёт только если файла ещё нет
+    data, _ = produce_or_load(p, datadir("sims", "mmc"); prefix = "mmc") do p
+        log = run_mmc(; p...)
+        Dict("wait" => [r.start - r.arrival for r in log],
+             "sojourn" => [r.finish - r.arrival for r in log])
+    end
+    push!(res, (p = p, wait = data["wait"], sojourn = data["sojourn"]))
+end
+
+# Сравнение имитации с аналитикой по среднему времени ожидания
+cs = [r.p[:c] for r in res if r.p[:lam] / (r.p[:c] * r.p[:mu]) < 1]
+sim_Wq = [mean(r.wait) for r in res if r.p[:lam] / (r.p[:c] * r.p[:mu]) < 1]
+ana_Wq = [mmc_analytic(0.9, 0.5, c).Wq for c in cs]
+plt = bar(string.(cs), [sim_Wq ana_Wq]; label = ["имитация" "аналитика"],
+          xlabel = "число каналов c", ylabel = "Wq")
+wsave(plotsdir("mmc_wq_compare.png"), plt)
+
+# Динамика времени ожидания для c = 2
+r2 = first(r for r in res if r.p[:c] == 2)
+wsave(plotsdir("mmc_wait_c2.png"),
+         plot(r2.wait[1:500]; xlabel = "клиент", ylabel = "время ожидания", legend = false))
+
+# число клиентов в очереди во времени (для каждого c)
+p2 = plot(xlabel = "время", ylabel = "длина очереди")
+for r in res
+    log = run_mmc(; r.p...)
+    (tq, xq), _ = queue_series(log)
+    k = findlast(<=(200.0), tq)                   # первые 200 единиц времени
+    plot!(p2, tq[1:k], xq[1:k]; seriestype = :steppost, label = "c=$(r.p[:c])")
+end
+wsave(plotsdir("mmc_queue_time.png"), p2)
+
+# вероятность ожидания (формула Эрланга) и загрузка, имитация и теория
+stat = [r for r in res if r.p[:lam] / (r.p[:c] * r.p[:mu]) < 1]
+cs2 = [r.p[:c] for r in stat]
+sim_Pw = [mean(r.wait .> 1e-12) for r in stat]
+ana_Pw = [mmc_analytic(0.9, 0.5, c).Pwait for c in cs2]
+p3 = bar(string.(cs2), [sim_Pw ana_Pw]; label = ["имитация" "Эрланг"],
+         xlabel = "число каналов c", ylabel = "P(ожидание)")
+wsave(plotsdir("mmc_pwait.png"), p3)

@@ -1,0 +1,67 @@
+using DrWatson
+@quickactivate "project"
+include(srcdir("sir_model.jl"))
+using Random, StatsPlots, DataFrames, Statistics, CSV
+script_name = splitext(basename(PROGRAM_FILE))[1]
+mkpath(plotsdir(script_name))
+mkpath(datadir(script_name))
+mkpath(datadir("sims"))
+
+tmax = 40.0
+u0 = [990, 10, 0] # S, I, R
+Random.seed!(1234)
+
+param_dict = Dict(
+    :β => 0.05,    # β - заражение
+    :c => 10.0,    # c - частота контактов
+    :γ => 0.25,    # γ - выздоровление
+    :μ => 0.0,     # μ - смертность
+    :t_vac => 5.0, # момент вакцинации
+    :fraction => [0.0, 0.1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9], # доля вакцинированных
+    :rep => collect(1:5), # номер повтора (модель стохастическая)
+)
+param_list = dict_list(param_dict)
+
+R0 = param_dict[:c] * param_dict[:β] / param_dict[:γ]
+threshold = 1 - 1 / R0
+
+results = DataFrame()
+varying = [:fraction, :t_vac, :rep] # параметры, попадающие в имена файлов
+
+for params in param_list
+    @unpack β, c, γ, μ, t_vac, fraction, rep = params
+    p = [β, c, γ, μ]
+    Random.seed!(1000 + rep)
+
+    des_model = MakeSIRModel(u0, p)
+    activate(des_model)
+    @process vaccinate(des_model.sim, des_model, t_vac, fraction)
+    sir_run(des_model, tmax)
+    data_des = out(des_model)
+
+    n_vacc = round(Int, fraction * u0[1])
+    push!(results, (fraction = fraction, t_vac = t_vac, rep = rep,
+        peak_I = maximum(data_des.I),
+        infected = data_des.R[end] - n_vacc))
+
+    filename = savename("vac", params, "csv"; accesses = varying)
+    CSV.write(datadir("sims", filename), data_des)
+
+    if rep == 1
+        @df data_des plot(:t, [:S :I :R], labels = ["S" "I" "R"],
+            xlab = "Время", ylab = "Численность",
+            title = "SIR (DES), доля вакцинированных = $fraction")
+        savefig(plotsdir(script_name, savename("sir_des_vac", params; accesses = varying) * ".png"))
+    end
+end
+
+summary_df = combine(groupby(results, :fraction),
+    :peak_I => mean => :mean_peak,
+    :infected => mean => :mean_infected)
+println(summary_df)
+CSV.write(datadir(script_name, "vaccination.csv"), summary_df)
+
+plot(summary_df.fraction, summary_df.mean_infected ./ sum(u0), marker = :circle,
+    xlab = "Доля вакцинированных", ylab = "Доля переболевших", label = "Модель")
+vline!([threshold], linestyle = :dash, label = "Порог 1 - 1/R₀")
+savefig(plotsdir(script_name, "vaccination.png"))

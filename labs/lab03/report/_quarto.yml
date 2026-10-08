@@ -6,9 +6,9 @@ standalone: true
 self-contained: true
 
 ## Julia support
-# engine: julia
-# julia:
-#   exeflags: ["--project=../project"]
+engine: julia
+julia:
+  exeflags: ["--project=../project"]
 
 ## Generic options
 lang: ru-RU
@@ -34,6 +34,7 @@ format:
     toc-depth: 2
   ### Pdf output format
   pdf:
+    monofont: "DejaVu Sans Mono"
     # pdf-engine: xelatex
     ### minted support
     # filters:
