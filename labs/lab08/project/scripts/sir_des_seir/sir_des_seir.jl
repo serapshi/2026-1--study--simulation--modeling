@@ -1,0 +1,33 @@
+using DrWatson
+@quickactivate "project"
+include(srcdir("sir_model_seir.jl"))
+using Random, StatsPlots, CSV
+script_name = splitext(basename(PROGRAM_FILE))[1]
+mkpath(plotsdir(script_name))
+mkpath(datadir(script_name))
+
+tmax = 60.0
+u0 = [990, 10, 0] # S, I, R
+param_dict = Dict(
+    :β => 0.07, :c => 15.0, :γ => 0.25, :μ => 0.0,
+    :σ => [0.25, 0.5, 1.0, 1000.0],
+)
+param_list = dict_list(param_dict)
+
+plt_I = plot(xlab = "Время", ylab = "Инфицированные (I)", title = "SEIR: влияние σ")
+for params in param_list
+    @unpack β, c, γ, μ, σ = params
+    Random.seed!(1234)
+    m = MakeSIRModel(u0, [β, c, γ, μ, σ])
+    activate(m)
+    sir_run(m, tmax)
+    data = out(m)
+
+    @df data plot(:t, [:S :E :I :R], labels = ["S" "E" "I" "R"],
+        xlab = "Время", ylab = "Численность", title = "SEIR, $(savename(params))")
+    savefig(plotsdir(script_name, savename("seir", params) * ".png"))
+
+    plot!(plt_I, data.t, data.I, label = "σ = $σ")
+    CSV.write(datadir(script_name, savename("seir", params, "csv")), data)
+end
+savefig(plt_I, plotsdir(script_name, "I_compare.png"))

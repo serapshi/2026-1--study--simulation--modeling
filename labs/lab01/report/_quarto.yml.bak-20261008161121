@@ -1,0 +1,32 @@
+engine: julia
+keep-tex: true
+julia:
+  exeflags: ["--project=../project"]
+
+format:
+  pdf:
+    monofont: "DejaVu Sans Mono"
+    pdf-engine: xelatex
+    latex-auto-install: false
+    toc: true
+    number-sections: true
+    colorlinks: false
+    toc-depth: 2
+    lof: true
+    lot: true
+    documentclass: scrreprt
+    papersize: a4
+    fontsize: 12pt
+    linestretch: 1.5
+    babel-lang: russian
+    babel-otherlangs: english
+    cite-method: biblatex
+    biblio-style: gost-numeric
+    biblatexoptions:
+      - backend=biber
+      - langhook=extras
+      - autolang=other*
+    csquotes: true
+    indent: true
+    include-in-header:
+      - file: _resources/tex/preamble.tex
